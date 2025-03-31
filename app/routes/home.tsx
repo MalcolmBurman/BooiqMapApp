@@ -1,5 +1,6 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+import { Head } from "../components/head";
+import { List } from "../components/list";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -9,5 +10,11 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  return <Welcome />;
+  return (
+  <>
+  <div className="px-4 py-8 md:px-10 md:py-16">
+  <List />
+  </div>
+  </>
+);
 }
