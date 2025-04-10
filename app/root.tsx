@@ -6,9 +6,13 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { useEffect } from "react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Navbar } from "./components/navbar";
+
+import { useState } from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -24,6 +28,11 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  /*useEffect(() => {
+    if (performance.getEntriesByType("navigation")[0]?.type === "reload") {
+      localStorage.clear();
+    }
+  }, []);*/
   return (
     <html lang="en">
       <head>
@@ -33,6 +42,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
+        <header className="absolute top-9 left-10 z-50">
+          <Navbar />
+        </header>
         {children}
         <ScrollRestoration />
         <Scripts />

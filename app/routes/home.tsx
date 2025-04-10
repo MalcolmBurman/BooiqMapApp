@@ -1,20 +1,21 @@
 import type { Route } from "./+types/home";
-import { Head } from "../components/head";
-import { List } from "../components/list";
+import { Maplibre } from "../components/map";
+import { PropertiesForm } from "../components/propertiesForm";
+import { Toaster } from "sonner";
 
 export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
+  return [{ title: "Karta" }, { name: "description", content: "" }];
 }
 
 export default function Home() {
   return (
-  <>
-  <div className="px-4 py-8 md:px-10 md:py-16">
-  <List />
-  </div>
-  </>
-);
+    <>
+      <div className="flex h-screen">
+        <div className="m-auto">
+          <Maplibre />
+        </div>
+      </div>
+      <Toaster position="bottom-left" />
+    </>
+  );
 }
