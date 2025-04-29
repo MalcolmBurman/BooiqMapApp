@@ -132,3 +132,18 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.maplibregl-popup.custom-popup {
+  max-width: 200px;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.maplibregl-popup.custom-popup .maplibregl-popup-content {
+  background-color: white;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 0.875rem;
+  font-weight: 500;
+}

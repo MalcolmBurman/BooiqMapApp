@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -16,39 +16,20 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
 import type { SortingState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { flexRender } from "@tanstack/react-table";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { Label } from "../components/ui/label";
-import { toast } from "sonner";
+import { FastighetsInfoAddAdress } from "./fastighetsInfoAddAdress";
 
 interface DataItem {
   id: number;
   adress: string;
-  verksamhet: string;
 }
-
-const columns = [
-  {
-    accessorKey: "adress",
-    header: "Adress",
-  },
-  {
-    accessorKey: "verksamhet",
-    header: "Verksamhet",
-  },
-];
 
 export function FastighetsInfoAdresser(props: any) {
   const [data, setData] = useState<DataItem[]>([]);
@@ -57,53 +38,82 @@ export function FastighetsInfoAdresser(props: any) {
     []
   );
   const [rowSelection, setRowSelection] = React.useState({});
+  const [listUpdated, setListUpdated] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("adresser");
-    const allAdresser: DataItem[] = stored ? JSON.parse(stored) : [];
-
-    const filteredAdresser = allAdresser
-      .filter((item) => item.id === props.fastighet.id)
-      .reverse();
-
-    setData(filteredAdresser);
-  }, [props.fastighet.id]);
-
-  function handleSave() {
-    const adress = document.getElementById("adress") as HTMLInputElement;
-    const verksamhet = document.getElementById(
-      "verksamhet"
-    ) as HTMLInputElement;
-
-    if (!adress.value) {
-      toast("Fyll i adress");
+  const fetchAdresses = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:3001/getAddresses/${props.fastighet.id}`
+      );
+      if (!res.ok) {
+        return;
+      }
+      const json = await res.json();
+      setData(json.address.reverse());
+      return;
+    } catch (err) {
       return;
     }
+  };
 
-    const id = props.fastighet.id;
+  const deleteAddress = async (id: number, pointId: number) => {
+    try {
+      const res = await fetch(`http://localhost:3001/deleteAddress/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        return;
+      }
 
-    const newEntry: DataItem = {
-      id,
-      adress: adress.value,
-      verksamhet: verksamhet.value,
-    };
+      setListUpdated(!listUpdated);
+      if (props.forceNullDrawControl) {
+        props.onMapUpdate(!props.mapState);
+      } else {
+        props.mapRef.removeLayer(pointId);
+        props.mapRef.removeSource(pointId);
+        props.fetchAddresses();
+      }
+      return;
+    } catch (err) {
+      return;
+    }
+  };
 
-    const existingAdresser = localStorage.getItem("adresser");
-    const adresser = existingAdresser ? JSON.parse(existingAdresser) : [];
+  const columns = [
+    {
+      accessorKey: "adress",
+      header: ({ column }: any) => {
+        return (
+          <Button variant="ghost" onClick={() => column.toggleSorting()}>
+            Address
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+    },
+    {
+      accessorKey: "id",
+      header: "",
+      cell: ({ row }: any) => {
+        return (
+          <Button
+            variant="ghost"
+            className="hover:bg-destructive hover:text-white"
+            size="sm"
+            onClick={() => {
+              deleteAddress(row.original.id, row.original.mapObject[0].id);
+            }}
+          >
+            <Trash2 className="size-5" />
+          </Button>
+        );
+      },
+    },
+  ];
 
-    adresser.push(newEntry);
-    localStorage.setItem("adresser", JSON.stringify(adresser));
-
-    const filteredAdresser = adresser
-      .filter((item: DataItem) => item.id === props.fastighet.id)
-      .reverse();
-    setData(filteredAdresser);
-
-    toast("Adress sparad");
-
-    adress.value = "";
-    verksamhet.value = "";
-  }
+  useEffect(() => {
+    fetchAdresses();
+  }, [props.fastighet.id, listUpdated]);
 
   const table = useReactTable<DataItem>({
     data,
@@ -128,14 +138,14 @@ export function FastighetsInfoAdresser(props: any) {
 
   return (
     <div className="grid gap-4 py-4 ml-5 mr-5 ">
-      <div className=" min-h-65 w-full">
+      <div className=" min-h-56 border rounded-lg">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="">
+                    <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -156,7 +166,7 @@ export function FastighetsInfoAdresser(props: any) {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="">
+                    <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -178,43 +188,53 @@ export function FastighetsInfoAdresser(props: any) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex space-x-4 py-1  ">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Lägg till</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Lägg till adress</DialogTitle>
-              <DialogDescription></DialogDescription>
-            </DialogHeader>
-            <div className=" flex gap-2 ">
-              <Input id="adress" placeholder="Grafikergatan 2a" />
-              <Input id="verksamhet" placeholder="Kontor" />
-              <Button onClick={handleSave}>Lägg till</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-        <Label>
-          Sida {table.getState().pagination.pageIndex + 1} av{" "}
-          {table.getPageCount()}
-        </Label>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Föregående
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Nästa
-        </Button>
+      <div className="flex w-full justify-between py-1">
+        <div className="flex">
+          {props.forceNullDrawControl ||
+          props.drawControlRef.current == null ? (
+            <FastighetsInfoAddAdress
+              fastighet={props.fastighet}
+              onSave={() => setListUpdated(!listUpdated)}
+              onMapUpdate={props.onMapUpdate}
+              mapState={props.mapState}
+            />
+          ) : (
+            <Button
+              variant={"outline"}
+              onClick={() => {
+                const instance =
+                  props.drawControlRef.current?.getTerraDrawInstance();
+                instance?.setMode("point");
+                props.setDrawingAdress(true);
+              }}
+            >
+              Lägg till
+            </Button>
+          )}
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <Label>
+            Sida {table.getState().pagination.pageIndex + 1} av{" "}
+            {table.getPageCount()}
+          </Label>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Föregående
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Nästa
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -65,7 +65,7 @@ export function DataTable() {
       accessorKey: "beteckning",
       header: "Beteckning",
       cell: ({ row }: any) => (
-        <FastighetsInfo fastighet={row.original} onRefresh={refreshData} />
+        <FastighetsInfo fastighet={row.original} onRefresh={loadProperties} />
       ),
     },
     {
@@ -113,23 +113,20 @@ export function DataTable() {
   );
   const [rowSelection, setRowSelection] = React.useState({});
 
-  useEffect(() => {
-    const stored = localStorage.getItem("properties");
-    setData(
-      JSON.parse(stored ? stored : "[]")
-        .slice()
-        .reverse()
-    );
-  }, []);
+  const loadProperties = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/getProperties");
+      const json = await res.json();
+      setData((json.properties || []).slice().reverse());
+    } catch (err) {
+      console.error("Failed to load properties:", err);
+      setData([]);
+    }
+  };
 
-  function refreshData() {
-    const stored = localStorage.getItem("properties");
-    setData(
-      JSON.parse(stored ? stored : "[]")
-        .slice()
-        .reverse()
-    );
-  }
+  useEffect(() => {
+    loadProperties();
+  }, []);
 
   const table = useReactTable<DataItem>({
     data,
@@ -148,22 +145,56 @@ export function DataTable() {
     },
   });
 
+  async function handleDeleteSelected() {
+    const selectedRowIds = Object.keys(rowSelection);
+
+    if (selectedRowIds.length === 0) return;
+
+    const selectedPropertyIds = selectedRowIds.map(
+      (rowId) => data[parseInt(rowId)].id
+    );
+
+    try {
+      await Promise.all(
+        selectedPropertyIds.map((id) =>
+          fetch(`http://localhost:3001/deleteProperty/${id}`, {
+            method: "DELETE",
+          })
+        )
+      );
+
+      const newData = data.filter(
+        (item) => !selectedPropertyIds.includes(item.id)
+      );
+
+      setData(newData);
+      setRowSelection({});
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
+  }
+
   return (
     <div className="rounded-md border px-5">
       <div className="flex items-center py-4 pl-10">
         <Input
-          placeholder="Filtrera fastighetsägare..."
+          placeholder="Sök beteckning..."
           value={
-            (table.getColumn("fastighetsagare")?.getFilterValue() as string) ??
-            ""
+            (table.getColumn("beteckning")?.getFilterValue() as string) ?? ""
           }
           onChange={(event) =>
-            table
-              .getColumn("fastighetsagare")
-              ?.setFilterValue(event.target.value)
+            table.getColumn("beteckning")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
+        <Button
+          variant="destructive"
+          className="ml-auto mr-10"
+          onClick={handleDeleteSelected}
+          disabled={Object.keys(rowSelection).length === 0}
+        >
+          Radera
+        </Button>
       </div>
       <div className="min-h-[52vh] mx-10 mb-5">
         <Table>
@@ -172,7 +203,7 @@ export function DataTable() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="pr-50">
+                    <TableHead className="w-[250px]" key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -193,7 +224,7 @@ export function DataTable() {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="pr-50">
+                    <TableCell key={cell.id} className="">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

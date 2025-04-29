@@ -1,6 +1,5 @@
 import type { Route } from "./+types/home";
 import { Maplibre } from "../components/map";
-import { PropertiesForm } from "../components/propertiesForm";
 import { Toaster } from "sonner";
 
 export function meta({}: Route.MetaArgs) {

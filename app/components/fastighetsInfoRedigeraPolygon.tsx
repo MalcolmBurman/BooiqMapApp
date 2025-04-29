@@ -13,7 +13,6 @@ import maplibregl from "maplibre-gl";
 import { MaplibreTerradrawControl } from "@watergis/maplibre-gl-terradraw";
 import "@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css";
 import "maplibre-gl/dist/maplibre-gl.css";
-import * as terraDraw from "@watergis/maplibre-gl-terradraw";
 
 export function FastighetsInfoRedigeraPolygon(props: any) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -26,12 +25,15 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
       if (!isOpen) return;
       const map = new maplibregl.Map({
         container: mapContainerRef.current!,
+        attributionControl: false,
         style: {
           version: 8,
           sources: {
             osm: {
               type: "raster",
-              tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+              tiles: [
+                "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+              ],
               tileSize: 256,
             },
           },
@@ -69,9 +71,15 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
       setTimeout(() => {
         const drawInstance = drawControl.getTerraDrawInstance();
 
-        const [addedFeature] = drawInstance.addFeatures([geoJsonData]);
+        const [addedFeature]: any = drawInstance.addFeatures([geoJsonData]);
 
         drawInstance.selectFeature(addedFeature.id);
+
+        drawInstance.on("deselect", () => {
+          setTimeout(() => {
+            drawInstance.selectFeature(addedFeature.id);
+          }, 50);
+        });
 
         const bounds = new maplibregl.LngLatBounds();
 
@@ -90,23 +98,32 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
     }, 50);
   }, [isOpen]);
 
-  function handleEdit() {
-    const drawInstance = drawControlRef.current?.getTerraDrawInstance();
+  async function handleEdit() {
+    const drawInstance = drawControlRef.current!.getTerraDrawInstance();
     const snapshot = drawInstance.getSnapshot();
 
-    const id = props.fastighet.id;
+    try {
+      const response = await fetch(
+        `http://localhost:3001/updateProperty/${props.fastighet.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mapObject: [snapshot[0]],
+          }),
+        }
+      );
 
-    const fastigheter = JSON.parse(localStorage.getItem("properties") || "[]");
-
-    const index = fastigheter.findIndex((f: { id: string }) => f.id === id);
-
-    if (index !== -1) {
-      fastigheter[index].mapObject = [snapshot[0]];
-
-      localStorage.setItem("properties", JSON.stringify(fastigheter));
-      toast("Ändringar sparade");
-
-      props.onSave();
+      if (response.ok) {
+        toast("Ändringar sparade");
+        props.onSave();
+      } else {
+        toast("Kunde inte uppdatera fastighet");
+      }
+    } catch (error) {
+      console.error("Drizzle error:", error);
     }
   }
 
@@ -123,16 +140,18 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
       }}
     >
       <DialogTrigger asChild>
-        <Button>Redigera</Button>
+        <Button className="mb-1" variant={"outline"}>
+          Redigera
+        </Button>
       </DialogTrigger>
-      <DialogContent style={{ maxWidth: "51vw" }}>
+      <DialogContent style={{ maxWidth: "70vw" }}>
         <DialogHeader>
           <DialogTitle>Redigera fastighet</DialogTitle>
         </DialogHeader>
         <DialogDescription>
           Redigera fastigheten genom att klicka och dra i punkterna.
         </DialogDescription>
-        <div ref={mapContainerRef} className="w-full h-[60vh] rounded-xl" />
+        <div ref={mapContainerRef} className="w-full h-[60vh] rounded-lg" />
         <div className="flex gap-2">
           <Button
             onClick={() => {
