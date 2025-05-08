@@ -22,6 +22,7 @@ import { Input } from "./ui/input";
 import * as terraDraw from "terra-draw";
 import * as turf from "@turf/turf";
 import { pointOnFeature } from "@turf/turf";
+const apiUrl = import.meta.env.VITE_API_URL;
 
 export function Maplibre() {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -47,7 +48,7 @@ export function Maplibre() {
 
   const fetchProperties = async () => {
     try {
-      const res = await fetch("http://localhost:3001/getProperties", {
+      const res = await fetch(`${apiUrl}/getProperties`, {
         method: "GET",
         credentials: "include",
       });
@@ -64,7 +65,7 @@ export function Maplibre() {
 
   const fetchAddresses = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/getAddresses`, {
+      const res = await fetch(`${apiUrl}/getAddresses`, {
         method: "GET",
         credentials: "include",
       });

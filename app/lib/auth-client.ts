@@ -9,5 +9,7 @@ export const {
   resetPassword,
 } = createAuthClient({
   baseURL: "https://booiqmapappapi.onrender.com",
-  credentials: "include",
+  fetchOptions: {
+    credentials: "include",
+  },
 });
