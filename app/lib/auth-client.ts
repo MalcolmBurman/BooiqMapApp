@@ -7,4 +7,7 @@ export const {
   signOut,
   forgetPassword,
   resetPassword,
-} = createAuthClient();
+} = createAuthClient({
+  baseURL: "https://booiqmapappapi.onrender.com",
+  credentials: "include",
+});
