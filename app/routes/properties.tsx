@@ -7,12 +7,15 @@ export function meta({}: Route.MetaArgs) {
 export default function Properties() {
   return (
     <>
-      <div className="flex h-screen">
-        <div className="m-auto">
+      <div className="h-full">
+        <div className="ml-[12rem] flex items-center justify-center h-full">
           <DataTable />
         </div>
       </div>
-      <Toaster position="bottom-left" />
+      <Toaster
+        position="bottom-left"
+        toastOptions={{ style: { marginLeft: "12rem" } }}
+      />
     </>
   );
 }

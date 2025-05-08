@@ -85,7 +85,7 @@ export function FastighetsInfoAdresser(props: any) {
       header: ({ column }: any) => {
         return (
           <Button variant="ghost" onClick={() => column.toggleSorting()}>
-            Address
+            Adress
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -205,7 +205,7 @@ export function FastighetsInfoAdresser(props: any) {
                 const instance =
                   props.drawControlRef.current?.getTerraDrawInstance();
                 instance?.setMode("point");
-                props.setDrawingAdress(true);
+                props.setDrawingAddress(true);
               }}
             >
               Lägg till

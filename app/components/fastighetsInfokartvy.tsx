@@ -36,6 +36,10 @@ export function FastighetsInfoKartvy(props: any) {
       <X
         className="absolute top-3 right-3 size-4 text-gray-600 hover:text-black transition-colors "
         onClick={() => {
+          const prev = props.previousSelectedFeatureRef.current;
+          if (prev?.id && props.mapRef.getLayer(prev.id)) {
+            props.mapRef.setPaintProperty(prev.id, "fill-color", "#404040");
+          }
           props.setSelectedFeature(null);
           props.previousSelectedFeatureRef.current = null;
         }}
@@ -61,7 +65,7 @@ export function FastighetsInfoKartvy(props: any) {
           <FastighetsInfoAdresser
             fastighet={props.fastighet}
             drawControlRef={props.drawControlRef}
-            setDrawingAdress={props.setDrawingAdress}
+            setDrawingAddress={props.setDrawingAddress}
             fetchAddresses={props.fetchAddresses}
             mapRef={props.mapRef}
           />

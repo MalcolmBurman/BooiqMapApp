@@ -6,10 +6,11 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
+import { useSession } from "./lib/auth-client";
 import type { Route } from "./+types/root";
 import "./app.css";
-import { Navbar } from "./components/navbar";
+import { Navbar } from "./components/navbar2";
+import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -25,6 +26,7 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { data: session } = useSession();
   return (
     <html lang="en">
       <head>
@@ -33,11 +35,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
-        <header className="absolute top-9 left-9 z-50">
-          <Navbar />
-        </header>
-        {children}
+      <body className=" antialiased flex h-screen">
+        <SidebarProvider defaultOpen={true}>
+          <div className="grid grid-cols-[auto,1fr], w-full">
+            {session && <Navbar />}
+            <main className="flex flex-col h-screen overflow-auto">
+              <SidebarTrigger className="md:hidden" />
+              {children}
+            </main>
+          </div>
+        </SidebarProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

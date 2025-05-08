@@ -107,6 +107,7 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
         `http://localhost:3001/updateProperty/${props.fastighet.id}`,
         {
           method: "PUT",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },

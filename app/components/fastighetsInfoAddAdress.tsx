@@ -27,7 +27,11 @@ export function FastighetsInfoAddAdress(props: any) {
   const fetchProperties = async () => {
     try {
       const res = await fetch(
-        `http://localhost:3001/getProperty/${props.fastighet.id}`
+        `http://localhost:3001/getProperty/${props.fastighet.id}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
       );
       if (!res.ok) {
         toast("Ett fel uppstod vid laddning av fastighet");
@@ -65,6 +69,7 @@ export function FastighetsInfoAddAdress(props: any) {
     try {
       fetch("http://localhost:3001/insertAddress", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

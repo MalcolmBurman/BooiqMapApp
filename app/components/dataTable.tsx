@@ -115,7 +115,13 @@ export function DataTable() {
 
   const loadProperties = async () => {
     try {
-      const res = await fetch("http://localhost:3001/getProperties");
+      const res = await fetch("http://localhost:3001/getProperties", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (res.status == 401) {
+        window.location.href = "/";
+      }
       const json = await res.json();
       setData((json.properties || []).slice().reverse());
     } catch (err) {
@@ -196,7 +202,7 @@ export function DataTable() {
           Radera
         </Button>
       </div>
-      <div className="min-h-[52vh] mx-10 mb-5">
+      <div className="min-h-[52vh]  mx-10 mb-5">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

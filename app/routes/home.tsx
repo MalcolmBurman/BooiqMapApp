@@ -14,7 +14,10 @@ export default function Home() {
           <Maplibre />
         </div>
       </div>
-      <Toaster position="bottom-left" />
+      <Toaster
+        position="bottom-left"
+        toastOptions={{ style: { marginLeft: "12rem" } }}
+      />
     </>
   );
 }

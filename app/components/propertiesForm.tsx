@@ -55,6 +55,7 @@ export function PropertiesForm(props: any) {
     try {
       const response = await fetch("http://localhost:3001/insertProperty", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

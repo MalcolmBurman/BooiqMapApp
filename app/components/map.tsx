@@ -30,13 +30,13 @@ export function Maplibre() {
   const [drawnFeature, setDrawnFeature] = useState<boolean>(false);
   const [drawnAdress, setDrawnAdress] = useState<boolean>(false);
   const [drawingFeature, setDrawingFeature] = useState<boolean>(false);
-  const [drawingAdress, setDrawingAdress] = useState<boolean>(false);
+  const [drawingAddress, setDrawingAddress] = useState<boolean>(false);
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
   const [fastigheter, setFastigheter] = useState<any>([]);
   const [addresses, setAddresses] = useState<any>([]);
   const drawingFeatureRef = useRef(drawingFeature);
   const drawnFeatureRef = useRef(drawnFeature);
-  const drawingAdressRef = useRef(drawingAdress);
+  const drawingAddressRef = useRef(drawingAddress);
   const drawnAdressRef = useRef(drawnAdress);
   const selectedFeatureRef = useRef(selectedFeature);
   const fastigheterRef = useRef(fastigheter);
@@ -47,7 +47,13 @@ export function Maplibre() {
 
   const fetchProperties = async () => {
     try {
-      const res = await fetch("http://localhost:3001/getProperties");
+      const res = await fetch("http://localhost:3001/getProperties", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (res.status == 401) {
+        window.location.href = "/";
+      }
       const json = await res.json();
       setFastigheter(json.properties);
       return;
@@ -58,7 +64,10 @@ export function Maplibre() {
 
   const fetchAddresses = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/getAddresses`);
+      const res = await fetch(`http://localhost:3001/getAddresses`, {
+        method: "GET",
+        credentials: "include",
+      });
       if (!res.ok) {
         return;
       }
@@ -74,7 +83,7 @@ export function Maplibre() {
   useEffect(() => {
     drawingFeatureRef.current = drawingFeature;
     drawnFeatureRef.current = drawnFeature;
-    drawingAdressRef.current = drawingAdress;
+    drawingAddressRef.current = drawingAddress;
     drawnAdressRef.current = drawnAdress;
     selectedFeatureRef.current = selectedFeature;
     fastigheterRef.current = fastigheter;
@@ -82,7 +91,7 @@ export function Maplibre() {
   }, [
     drawingFeature,
     drawnFeature,
-    drawingAdress,
+    drawingAddress,
     drawnAdress,
     selectedFeature,
     fastigheter,
@@ -177,7 +186,7 @@ export function Maplibre() {
       if (
         drawingFeatureRef.current ||
         drawnFeatureRef.current ||
-        drawingAdressRef.current ||
+        drawingAddressRef.current ||
         drawnAdressRef.current
       ) {
         drawInstance.on("deselect", () => {
@@ -192,7 +201,7 @@ export function Maplibre() {
       if (
         snapshot.length > 0 &&
         drawInstance.getMode() !== "select" &&
-        !drawingAdressRef.current &&
+        !drawingAddressRef.current &&
         !drawnAdressRef.current
       ) {
         drawInstance.setMode("select");
@@ -203,7 +212,7 @@ export function Maplibre() {
         setDrawingFeature(false);
       }
 
-      if (drawingAdressRef.current || drawnAdressRef.current) {
+      if (drawingAddressRef.current || drawnAdressRef.current) {
         if (
           !turf.booleanPointInPolygon(
             pointOnFeature(snapshot[0].geometry),
@@ -215,7 +224,7 @@ export function Maplibre() {
             drawInstance.clear();
             drawInstance.setMode("point");
             setDrawnAdress(false);
-            setDrawingAdress(true);
+            setDrawingAddress(true);
           }, 50);
           return;
         }
@@ -225,7 +234,7 @@ export function Maplibre() {
           if (snapshot[0].id) {
             drawInstance.selectFeature(snapshot[0].id);
           }
-          setDrawingAdress(false);
+          setDrawingAddress(false);
           setDrawnAdress(true);
         }
       }
@@ -242,6 +251,8 @@ export function Maplibre() {
   //Hanterar att rita fastigheter
   function handleDraw() {
     const instance = drawControlRef.current?.getTerraDrawInstance();
+    resetPolygonFillColor(mapRef.current!);
+    previousSelectedFeatureRef.current = null;
     if (drawingFeature) {
       instance?.setMode("select");
       setDrawingFeature(false);
@@ -257,7 +268,6 @@ export function Maplibre() {
   function handleDelete() {
     setDrawnAdress(false);
     setDrawnFeature(false);
-    previousSelectedFeatureRef.current = null;
     const instance = drawControlRef.current?.getTerraDrawInstance();
     instance?.clear();
   }
@@ -293,7 +303,9 @@ export function Maplibre() {
       map.on("mouseenter", point.id, (e) => {
         map.getCanvas().style.cursor = "pointer";
 
-        const coordinates = e.features?.[0]?.geometry?.coordinates.slice();
+        const geometry: any = e.features?.[0]?.geometry;
+
+        const coordinates = geometry?.coordinates.slice();
         const props = e.features?.[0]?.properties;
 
         popup
@@ -349,7 +361,7 @@ export function Maplibre() {
         if (
           drawingFeatureRef.current ||
           drawnFeatureRef.current ||
-          drawingAdressRef.current ||
+          drawingAddressRef.current ||
           drawnAdressRef.current
         )
           return;
@@ -361,6 +373,11 @@ export function Maplibre() {
         if (!fastighet) return;
 
         if (fastighetSelected === previousSelectedFeatureRef.current) return;
+
+        resetPolygonFillColor(map);
+
+        setPolygonFillColor(map, fastighetSelected.id, "#87CEEB");
+
         previousSelectedFeatureRef.current = fastighetSelected;
 
         pointLayerIdsRef.current.forEach((layerId) => {
@@ -394,6 +411,31 @@ export function Maplibre() {
     });
   }
 
+  //När man trycker på en fastighet
+  function setPolygonFillColor(
+    map: maplibregl.Map,
+    layerId: string,
+    color: string
+  ) {
+    if (map.getLayer(layerId)) {
+      map.setPaintProperty(layerId, "fill-color", color);
+      if (color === "#87CEEB") {
+        map.setPaintProperty(layerId, "fill-opacity", 0.8);
+      }
+      if (color === "#404040") {
+        map.setPaintProperty(layerId, "fill-opacity", 0.5);
+      }
+    }
+  }
+
+  //När den inte ska vara blå längre
+  function resetPolygonFillColor(map: maplibregl.Map) {
+    const prev: any = previousSelectedFeatureRef.current;
+    if (prev?.id && map.getLayer(prev.id)) {
+      setPolygonFillColor(map, prev.id, "#404040");
+    }
+  }
+
   //Rita om kartan
   useEffect(() => {
     const map = mapRef.current;
@@ -418,14 +460,20 @@ export function Maplibre() {
           drawInstance?.setMode("select");
           previousSelectedFeatureRef.current = null;
         }
-        if (drawingAdressRef.current === true) {
-          setDrawingAdress(false);
+        if (drawingAddressRef.current === true) {
+          setDrawingAddress(false);
           drawInstance?.setMode("select");
+        }
+        if (
+          drawingAddressRef.current === false &&
+          drawnAdressRef.current === false
+        ) {
+          resetPolygonFillColor(mapRef.current!);
         }
         if (
           drawingFeatureRef.current === false &&
           drawnFeatureRef.current === false &&
-          drawingAdressRef.current === false &&
+          drawingAddressRef.current === false &&
           drawnAdressRef.current === false
         ) {
           setSelectedFeature(null);
@@ -506,7 +554,7 @@ export function Maplibre() {
           map.removeLayer(layerId);
           map.removeSource(layerId);
         }
-        setDrawingAdress(false);
+        setDrawingAddress(false);
         setDrawnAdress(false);
         const instance = drawControlRef.current?.getTerraDrawInstance();
         instance?.setMode("select");
@@ -517,20 +565,13 @@ export function Maplibre() {
   }, [selectedFeature]);
 
   return (
-    <>
-      <div
-        ref={mapContainerRef}
-        style={{
-          width: "98vw",
-          height: "97vh",
-          borderRadius: "0.7rem",
-        }}
-      />
+    <div className="h-full">
+      <div ref={mapContainerRef} className="w-[100vw] h-[100vh]" />
 
       <Button
-        disabled={drawnFeature || drawingAdress || drawnAdress}
+        disabled={drawnFeature || drawingAddress || drawnAdress}
         onClick={handleDraw}
-        className={`absolute top-9 left-57 ${
+        className={`absolute top-7 left-55 ${
           drawingFeature ? "hover:bg-red-600 bg-green-600" : "bg-primary"
         } `}
       >
@@ -540,7 +581,7 @@ export function Maplibre() {
 
       {/*Rita fastighet*/}
       {(drawingFeature || drawnFeature) && (
-        <Card className="absolute top-25 left-9 shadow-md drop-shadow-lg">
+        <Card className="absolute top-19 left-55 shadow-md drop-shadow-lg">
           <CardHeader>
             <CardTitle>
               {drawingFeature ? "Att rita en fastighet" : "Ritad fastighet"}
@@ -556,7 +597,8 @@ export function Maplibre() {
               ) : (
                 <>
                   Du kan nu redigera fastigheten genom att klicka och dra i
-                  punkterna.
+                  punkterna. Du kan även radera hörn genom att högerklicka på
+                  dem.
                 </>
               )}
             </CardDescription>
@@ -588,14 +630,14 @@ export function Maplibre() {
       )}
 
       {/*Rita adress*/}
-      {(drawingAdress || drawnAdress) && (
-        <Card className="absolute top-25 left-9 shadow-md drop-shadow-lg">
+      {(drawingAddress || drawnAdress) && (
+        <Card className="absolute top-19 left-55 shadow-md drop-shadow-lg">
           <CardHeader>
             <CardTitle>
-              {drawingAdress ? "Att rita en adress" : "Ritad adress"}
+              {drawingAddress ? "Att rita en adress" : "Ritad adress"}
             </CardTitle>
             <CardDescription>
-              {drawingAdress ? (
+              {drawingAddress ? (
                 <>
                   Rita ut en punkt där adressen ska ligga. <br />
                   (kom ihåg att lägga den inom fastigheten)
@@ -615,7 +657,7 @@ export function Maplibre() {
             }}
           >
             <div className="flex gap-2">
-              {drawingAdress ? (
+              {drawingAddress ? (
                 <>
                   <Info className="absolute bottom-3 right-3 size-6" />
                 </>
@@ -640,13 +682,13 @@ export function Maplibre() {
         </Card>
       )}
 
-      {selectedFeature !== null && !(drawnAdress || drawingAdress) && (
+      {selectedFeature !== null && !(drawnAdress || drawingAddress) && (
         <FastighetsInfoKartvy
           fastighet={selectedFeature}
           fastigheter={fastigheter}
           setSelectedFeature={setSelectedFeature}
           drawControlRef={drawControlRef}
-          setDrawingAdress={setDrawingAdress}
+          setDrawingAddress={setDrawingAddress}
           previousSelectedFeatureRef={previousSelectedFeatureRef}
           setFastigheter={setFastigheter}
           fetchProperties={fetchProperties}
@@ -654,6 +696,6 @@ export function Maplibre() {
           mapRef={mapRef.current}
         />
       )}
-    </>
+    </div>
   );
 }

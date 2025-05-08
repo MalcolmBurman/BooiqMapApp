@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   react-app:
     build:
@@ -20,6 +18,8 @@ services:
       context: .
       dockerfile: Dockerfile.api
     working_dir: /app
+    env_file:
+      - .env
     ports:
       - "3001:3001"
     environment:
@@ -27,20 +27,3 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    depends_on:
-      - db
-
-  db:
-    image: postgis/postgis:17-master
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d
-
-volumes:
-  pgdata:
