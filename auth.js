@@ -7,7 +7,11 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
-  trustedOrigins: ["http://localhost:3001", "http://localhost:5173"],
+  trustedOrigins: [
+    "http://localhost:3001",
+    "http://localhost:5173",
+    "https://booiqmapappapi.onrender.com",
+  ],
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
