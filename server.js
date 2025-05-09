@@ -14,9 +14,9 @@ const corsOptions = {
   credentials: true,
 };
 
-app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(cors(corsOptions));
 app.options("{*any}", cors(corsOptions));
+app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(express.json());
 
 app.get("/getProperties", async (req, res) => {
