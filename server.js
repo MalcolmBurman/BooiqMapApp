@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: process.env.VITE_FRONT_URL, credentials: true }));
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(express.json());
 

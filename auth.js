@@ -7,11 +7,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
-  trustedOrigins: [
-    "http://localhost:3001",
-    "http://localhost:5173",
-    "https://booiqmapappapi.onrender.com",
-  ],
+  trustedOrigins: [process.env.VITE_FRONT_URL, process.env.VITE_API_URL],
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
@@ -70,13 +66,13 @@ export const auth = betterAuth({
   advanced: {
     crossSubDomainCookies: {
       enabled: true,
-      domain: ".example.com", // Domain with a leading period
+      domain: ".onrender.com", // Domain with a leading period
     },
     defaultCookieAttributes: {
       secure: true,
       httpOnly: true,
       sameSite: "none", // Allows CORS-based cookie sharing across subdomains
-      partitioned: true, // New browser standards will mandate this for foreign cookies
+      partitioned: false, // New browser standards will mandate this for foreign cookies
     },
   },
 });

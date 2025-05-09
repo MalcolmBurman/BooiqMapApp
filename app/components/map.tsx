@@ -53,7 +53,7 @@ export function Maplibre() {
         credentials: "include",
       });
       if (res.status == 401) {
-        window.location.href = "/";
+        //window.location.href = "/";
       }
       const json = await res.json();
       setFastigheter(json.properties);
