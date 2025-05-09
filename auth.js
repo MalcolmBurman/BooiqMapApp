@@ -73,6 +73,7 @@ export const auth = betterAuth({
       httpOnly: true,
       sameSite: "none", // Allows CORS-based cookie sharing across subdomains
       partitioned: false, // New browser standards will mandate this for foreign cookies
+      path: "/",
     },
   },
 });

@@ -11,5 +11,9 @@ export const {
   baseURL: "https://booiqmapappapi.onrender.com",
   fetchOptions: {
     credentials: "include",
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json",
+    },
   },
 });
