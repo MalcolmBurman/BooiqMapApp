@@ -16,13 +16,6 @@ const corsOptions = {
 
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(cors(corsOptions));
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", process.env.VITE_FRONT_URL);
-  res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  next();
-});
 app.options("{*any}", cors(corsOptions));
 app.use(express.json());
 
