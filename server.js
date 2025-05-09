@@ -13,7 +13,14 @@ const corsOptions = {
   origin: process.env.VITE_FRONT_URL,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Access-Control-Request-Headers",
+    "Access-Control-Allow-Credentials",
+    "Access-Control-Request-Method",
+    "Access-Control-Allow-Origin",
+  ],
 };
 
 app.use(cors(corsOptions));
