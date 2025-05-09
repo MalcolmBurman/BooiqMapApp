@@ -5,7 +5,6 @@ import { auth } from "./auth.js";
 import cors from "cors";
 import { properties, addresses } from "./schema.js";
 import { eq } from "drizzle-orm";
-import { set } from "better-auth";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
