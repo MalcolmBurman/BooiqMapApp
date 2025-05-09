@@ -13,11 +13,12 @@ const corsOptions = {
   origin: process.env.VITE_FRONT_URL,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  headers: ["Content-Type", "Authorization"],
 };
 
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(cors(corsOptions));
-
+app.options("{*any}", cors(corsOptions));
 app.use(express.json());
 
 app.get("/getProperties", async (req, res) => {
