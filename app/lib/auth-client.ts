@@ -12,8 +12,5 @@ export const {
   fetchOptions: {
     credentials: "include",
     mode: "cors",
-    headers: {
-      "Content-Type": "application/json",
-    },
   },
 });
