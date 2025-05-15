@@ -12,7 +12,7 @@ export default [
   route("api/deleteProperty/:id", "routes/api/deleteProperty.$id.ts"),
   route("api/deleteAddress/:id", "routes/api/deleteAddress.$id.ts"),
 
-  index("routes/_index.tsx"),
+  index("routes/index.tsx"),
   route("properties", "routes/properties.tsx"),
   route("sign-up", "routes/sign-up.tsx"),
   route("forgot-password", "routes/forgot-password.tsx"),
