@@ -55,7 +55,7 @@ export default function ForgotPassword() {
                   setLoading(true);
                   const res = await forgetPassword({
                     email: email,
-                    redirectTo: "http://localhost:5173/reset-password",
+                    redirectTo: "/reset-password",
                     fetchOptions: {
                       onResponse(context) {
                         setLoading(false);
