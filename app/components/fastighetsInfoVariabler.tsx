@@ -35,7 +35,7 @@ export function FastighetsInfoVariabler(props: any) {
     const id = fastighet.id;
 
     try {
-      const res = await fetch(`http://localhost:3001/updateProperty/${id}`, {
+      const res = await fetch(`/api/updateProperty/${id}`, {
         method: "PUT",
         credentials: "include",
         headers: {

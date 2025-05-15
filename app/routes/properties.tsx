@@ -1,9 +1,11 @@
 import type { Route } from "./+types/properties";
 import { DataTable } from "../components/dataTable";
 import { Toaster } from "sonner";
+
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Fastigheter" }, { name: "description", content: "" }];
 }
+
 export default function Properties() {
   return (
     <>

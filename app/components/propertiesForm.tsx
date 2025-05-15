@@ -6,7 +6,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../components/ui/sheet";
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -53,7 +53,7 @@ export function PropertiesForm(props: any) {
     };
 
     try {
-      const response = await fetch("http://localhost:3001/insertProperty", {
+      const response = await fetch("api/insertProperty", {
         method: "POST",
         credentials: "include",
         headers: {

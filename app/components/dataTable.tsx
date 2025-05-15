@@ -115,14 +115,14 @@ export function DataTable() {
 
   const loadProperties = async () => {
     try {
-      const res = await fetch("http://localhost:3001/getProperties", {
+      const res = await fetch("/api/getProperties", {
         method: "GET",
         credentials: "include",
       });
-      if (res.status == 401) {
+      const json = await res.json();
+      if (json.status == 401) {
         window.location.href = "/";
       }
-      const json = await res.json();
       setData((json.properties || []).slice().reverse());
     } catch (err) {
       console.error("Failed to load properties:", err);
@@ -163,7 +163,7 @@ export function DataTable() {
     try {
       await Promise.all(
         selectedPropertyIds.map((id) =>
-          fetch(`http://localhost:3001/deleteProperty/${id}`, {
+          fetch(`api/deleteProperty/${id}`, {
             method: "DELETE",
           })
         )
@@ -194,7 +194,9 @@ export function DataTable() {
           className="max-w-sm"
         />
         <Button
-          variant="destructive"
+          variant={
+            Object.keys(rowSelection).length > 0 ? "destructive" : "outline"
+          }
           className="ml-auto mr-10"
           onClick={handleDeleteSelected}
           disabled={Object.keys(rowSelection).length === 0}

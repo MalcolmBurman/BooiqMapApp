@@ -7,10 +7,5 @@ export const {
   signOut,
   forgetPassword,
   resetPassword,
-} = createAuthClient({
-  baseURL: "https://booiqmapappapi.onrender.com",
-  fetchOptions: {
-    credentials: "include",
-    mode: "cors",
-  },
-});
+  getSession,
+} = createAuthClient();

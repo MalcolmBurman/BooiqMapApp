@@ -22,7 +22,6 @@ import { Input } from "./ui/input";
 import * as terraDraw from "terra-draw";
 import * as turf from "@turf/turf";
 import { pointOnFeature } from "@turf/turf";
-const apiUrl = import.meta.env.VITE_API_URL;
 
 export function Maplibre() {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -48,14 +47,14 @@ export function Maplibre() {
 
   const fetchProperties = async () => {
     try {
-      const res = await fetch(`${apiUrl}/getProperties`, {
+      const res = await fetch("/api/getProperties", {
         method: "GET",
         credentials: "include",
       });
-      if (res.status == 401) {
-        //window.location.href = "/";
-      }
       const json = await res.json();
+      if (json.status == 401) {
+        window.location.href = "/";
+      }
       setFastigheter(json.properties);
       return;
     } catch (err) {
@@ -65,7 +64,7 @@ export function Maplibre() {
 
   const fetchAddresses = async () => {
     try {
-      const res = await fetch(`${apiUrl}/getAddresses`, {
+      const res = await fetch("/api/getAddresses", {
         method: "GET",
         credentials: "include",
       });
@@ -511,7 +510,7 @@ export function Maplibre() {
     };
 
     try {
-      const res = await fetch("http://localhost:3001/insertAddress", {
+      const res = await fetch("api/insertAddress", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -572,7 +571,7 @@ export function Maplibre() {
       <Button
         disabled={drawnFeature || drawingAddress || drawnAdress}
         onClick={handleDraw}
-        className={`absolute top-7 left-55 ${
+        className={`absolute top-5 left-55 ${
           drawingFeature ? "hover:bg-red-600 bg-green-600" : "bg-primary"
         } `}
       >
@@ -597,9 +596,9 @@ export function Maplibre() {
                 </>
               ) : (
                 <>
-                  Du kan nu redigera fastigheten genom att klicka och dra i
-                  punkterna. Du kan även radera hörn genom att högerklicka på
-                  dem.
+                  Du kan nu redigera fastigheten genom att dra i hörn, klicka på
+                  mellanpunkter för att lägga till nya hörn, eller högerklicka
+                  för att ta bort dem.
                 </>
               )}
             </CardDescription>
@@ -620,7 +619,7 @@ export function Maplibre() {
                     drawControlRef={drawControlRef}
                     fetchProperties={fetchProperties}
                   />
-                  <Button variant="destructive" onClick={handleDelete}>
+                  <Button variant="outline" onClick={handleDelete}>
                     Radera
                   </Button>
                 </>
@@ -672,7 +671,7 @@ export function Maplibre() {
                   <div className="flex justify-start gap-2">
                     <Button onClick={handleSaveAdress}>Spara</Button>
 
-                    <Button variant="destructive" onClick={handleDelete}>
+                    <Button variant="outline" onClick={handleDelete}>
                       Radera
                     </Button>
                   </div>
@@ -695,6 +694,10 @@ export function Maplibre() {
           fetchProperties={fetchProperties}
           fetchAddresses={fetchAddresses}
           mapRef={mapRef.current}
+          addressesFromMainMap={addresses.filter(
+            (address: any) => address.property_id === selectedFeature?.id
+          )}
+          setAddressesFromMainMap={setAddresses}
         />
       )}
     </div>

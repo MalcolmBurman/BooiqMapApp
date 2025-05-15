@@ -66,7 +66,12 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
         (controls as HTMLElement).style.display = "none";
       }
 
-      const geoJsonData = props.fastighet.mapObject[0];
+      let geoJsonData: any;
+      if (props.fastighet && props.fastighet.mapObject) {
+        geoJsonData = props.fastighet.mapObject[0];
+      } else {
+        geoJsonData = props.fastighet;
+      }
 
       setTimeout(() => {
         const drawInstance = drawControl.getTerraDrawInstance();
@@ -90,12 +95,12 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
         map.fitBounds(bounds, {
           padding: 100,
         });
-      }, 50);
+      }, 100);
 
       return () => {
         map.remove();
       };
-    }, 50);
+    }, 0);
   }, [isOpen]);
 
   async function handleEdit() {
@@ -103,23 +108,21 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
     const snapshot = drawInstance.getSnapshot();
 
     try {
-      const response = await fetch(
-        `http://localhost:3001/updateProperty/${props.fastighet.id}`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            mapObject: [snapshot[0]],
-          }),
-        }
-      );
+      const response = await fetch(`api/updateProperty/${props.fastighet.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mapObject: [snapshot[0]],
+        }),
+      });
 
       if (response.ok) {
         toast("Ändringar sparade");
-        props.onSave();
+        props.setMapObject(snapshot[0]);
+        props.setMapObjectAddress(snapshot[0]);
       } else {
         toast("Kunde inte uppdatera fastighet");
       }
@@ -145,12 +148,13 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
           Redigera
         </Button>
       </DialogTrigger>
-      <DialogContent style={{ maxWidth: "70vw" }}>
+      <DialogContent style={{ maxWidth: "80vw" }}>
         <DialogHeader>
           <DialogTitle>Redigera fastighet</DialogTitle>
         </DialogHeader>
         <DialogDescription>
-          Redigera fastigheten genom att klicka och dra i punkterna.
+          Redigera fastigheten genom att dra i hörn, klicka på mellanpunkter för
+          att lägga till nya hörn, eller högerklicka för att ta bort dem.
         </DialogDescription>
         <div ref={mapContainerRef} className="w-full h-[60vh] rounded-lg" />
         <div className="flex gap-2">
@@ -162,7 +166,7 @@ export function FastighetsInfoRedigeraPolygon(props: any) {
           >
             Spara
           </Button>
-          <Button variant={"destructive"} onClick={() => setIsOpen(false)}>
+          <Button variant={"outline"} onClick={() => setIsOpen(false)}>
             Avbryt
           </Button>
         </div>

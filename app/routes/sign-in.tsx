@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -37,13 +35,16 @@ export default function SignIn() {
         onResponse: (ctx) => {
           setLoading(false);
           if (ctx.response?.status === 200) {
-            //window.location.href = "/home";
+            window.location.href = "/home";
           }
           if (ctx.response?.status === 401 || ctx.response?.status === 400) {
             toast.error("Fel e-post eller lösenord");
           }
           if (ctx.response?.status === 403) {
             toast.error("Verifiera din e-postadress");
+          }
+          if (ctx.response?.status === 400) {
+            toast.error("fe");
           }
         },
       }

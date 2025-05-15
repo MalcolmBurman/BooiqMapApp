@@ -22,28 +22,6 @@ export function FastighetsInfoAddAdress(props: any) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const drawControlRef = useRef<MaplibreTerradrawControl | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const fastighetRef = useRef(props.fastighet);
-
-  const fetchProperties = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:3001/getProperty/${props.fastighet.id}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-      if (!res.ok) {
-        toast("Ett fel uppstod vid laddning av fastighet");
-        return;
-      }
-      const json = await res.json();
-      fastighetRef.current = json.property;
-      return;
-    } catch (err) {
-      return;
-    }
-  };
 
   async function handleSave() {
     const adress = document.getElementById("adress") as HTMLInputElement;
@@ -67,7 +45,7 @@ export function FastighetsInfoAddAdress(props: any) {
     };
 
     try {
-      fetch("http://localhost:3001/insertAddress", {
+      fetch("api/insertAddress", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -78,15 +56,71 @@ export function FastighetsInfoAddAdress(props: any) {
     } catch (err) {}
 
     toast("Adress sparad");
-    props.onSave();
+    props.setAddresses((prev: any) => [...prev, newEntry]);
     setIsOpen(false);
-    props.onMapUpdate(!props.mapState);
+    const newPoint = {
+      id: newEntry.mapObject[0].id,
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: newEntry.mapObject[0].geometry.coordinates,
+      },
+      properties: {
+        description: newEntry.adress,
+      },
+    };
+
+    const map = props.mainMap;
+    if (map) {
+      drawPointsOnMap(map, newPoint);
+    }
+  }
+
+  function drawPointsOnMap(map: maplibregl.Map, point: any) {
+    map.addLayer({
+      id: point.id,
+      type: "circle",
+      source: {
+        type: "geojson",
+        data: point,
+      },
+      paint: {
+        "circle-radius": 10,
+        "circle-color": "#ff8880",
+        "circle-stroke-color": "#FFFFFF",
+        "circle-stroke-width": 3,
+      },
+    });
+
+    const popup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      className: "custom-popup",
+    });
+
+    map.on("mouseenter", point.id, (e) => {
+      map.getCanvas().style.cursor = "pointer";
+
+      const geometry: any = e.features?.[0]?.geometry;
+
+      const coordinates = geometry?.coordinates.slice();
+      const props = e.features?.[0]?.properties;
+
+      popup
+        .setLngLat(coordinates)
+        .setHTML(`${props?.description || "Ingen data"}`)
+        .addTo(map);
+    });
+
+    map.on("mouseleave", point.id, () => {
+      map.getCanvas().style.cursor = "";
+      popup.remove();
+    });
   }
 
   useEffect(() => {
     setTimeout(() => {
       if (!isOpen) return;
-      fetchProperties();
       const map = new maplibregl.Map({
         container: mapContainerRef.current!,
         attributionControl: false,
@@ -149,7 +183,8 @@ export function FastighetsInfoAddAdress(props: any) {
       }
 
       setTimeout(() => {
-        const geoJsonData = fastighetRef.current.mapObject[0];
+        const geoJsonData =
+          props.mapObjectAddress || props.fastighet.mapObject[0];
 
         map.addLayer({
           id: "fastighet",
@@ -200,12 +235,12 @@ export function FastighetsInfoAddAdress(props: any) {
           }
 
           // implementera i framtid
-          /*drawInstance.on("deselect", () => {
+          /* drawInstance.on("deselect", () => {
             const snapshot: any = drawInstance.getSnapshot();
             setTimeout(() => {
               drawInstance.selectFeature(snapshot[0].id);
             }, 0);
-          });*/
+          }); */
 
           drawInstance.setMode("select");
           drawInstance.selectFeature(snapshot[0].id);
@@ -213,6 +248,28 @@ export function FastighetsInfoAddAdress(props: any) {
 
         map.fitBounds(bounds, {
           padding: 100,
+        });
+
+        const adresserGeoJsonData: any = [];
+
+        props.addresses.forEach((address: any) => {
+          const point = {
+            id: address.mapObject[0].id,
+            type: "Feature",
+
+            geometry: {
+              type: "Point",
+              coordinates: address.mapObject[0].geometry.coordinates,
+            },
+            properties: {
+              description: address.adress,
+            },
+          };
+
+          adresserGeoJsonData.push(point);
+        });
+        adresserGeoJsonData.forEach((point: any) => {
+          drawPointsOnMap(map, point);
         });
       }, 50);
 
@@ -227,7 +284,7 @@ export function FastighetsInfoAddAdress(props: any) {
       <DialogTrigger asChild>
         <Button variant={"outline"}>Lägg till</Button>
       </DialogTrigger>
-      <DialogContent style={{ maxWidth: "70vw" }}>
+      <DialogContent style={{ maxWidth: "80vw" }}>
         <DialogHeader>
           <DialogTitle>Lägg till adress</DialogTitle>
           <DialogDescription>
@@ -239,9 +296,9 @@ export function FastighetsInfoAddAdress(props: any) {
           className="w-full h-[60vh] rounded-lg bg-gray-300"
         />
         <div className="flex justify-start gap-2">
-          <Input id="adress" placeholder="Grafikergatan 2a" className="w-1/3" />
+          <Input id="adress" placeholder="Grafikergatan 2a" className="w-1/4" />
           <Button onClick={handleSave}>Lägg till</Button>
-          <Button variant={"destructive"} onClick={() => setIsOpen(false)}>
+          <Button variant={"outline"} onClick={() => setIsOpen(false)}>
             Avbryt
           </Button>
         </div>

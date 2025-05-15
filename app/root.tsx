@@ -26,7 +26,7 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
+  const session = useSession().data;
   return (
     <html lang="en">
       <head>

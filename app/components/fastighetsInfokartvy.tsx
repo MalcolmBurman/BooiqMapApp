@@ -39,6 +39,7 @@ export function FastighetsInfoKartvy(props: any) {
           const prev = props.previousSelectedFeatureRef.current;
           if (prev?.id && props.mapRef.getLayer(prev.id)) {
             props.mapRef.setPaintProperty(prev.id, "fill-color", "#404040");
+            props.mapRef.setPaintProperty(prev.id, "fill-opacity", 0.5);
           }
           props.setSelectedFeature(null);
           props.previousSelectedFeatureRef.current = null;
@@ -68,6 +69,8 @@ export function FastighetsInfoKartvy(props: any) {
             setDrawingAddress={props.setDrawingAddress}
             fetchAddresses={props.fetchAddresses}
             mapRef={props.mapRef}
+            addressesFromMainMap={props.addressesFromMainMap}
+            setAddressesFromMainMap={props.setAddressesFromMainMap}
           />
         </div>
 

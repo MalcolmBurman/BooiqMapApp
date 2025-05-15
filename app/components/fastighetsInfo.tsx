@@ -7,7 +7,7 @@ import {
   SheetTrigger,
   SheetClose,
 } from "../components/ui/sheet";
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { Separator } from "../components/ui/separator";
@@ -18,12 +18,33 @@ import { FastighetsInfoKarta } from "./fastighetsInfoKarta";
 import { ScrollArea } from "../components/ui/scroll-area";
 export function FastighetsInfo(props: any) {
   const [isOpen, setIsOpen] = useState(false);
-  const [mapState, setMapState] = useState(null);
+  const [mainMap, setMainMap] = useState(null);
   const [title, setTitle] = useState(props.fastighet.beteckning);
+  const [addresses, setAddresses] = useState([]);
+  const [mapObjectAddress, setMapObjectAddress] = useState(null);
 
-  const handleMapUpdate = (newMapState: any) => {
-    setMapState(newMapState);
+  const fetchAddresses = async () => {
+    try {
+      const res = await fetch(`/api/getAddresses/${props.fastighet.id}`);
+      if (!res.ok) {
+        return;
+      }
+      const json = await res.json();
+
+      setAddresses(json.address.reverse());
+      return;
+    } catch (err) {
+      return;
+    }
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    fetchAddresses();
+  }, [isOpen]);
 
   return (
     <Sheet
@@ -67,7 +88,9 @@ export function FastighetsInfo(props: any) {
               <FastighetsInfoKarta
                 fastighet={props.fastighet}
                 isOpen={isOpen}
-                mapState={mapState}
+                setMainMap={setMainMap}
+                addresses={addresses}
+                setMapObjectAddress={setMapObjectAddress}
               />
             </div>
           </div>
@@ -78,9 +101,11 @@ export function FastighetsInfo(props: any) {
             <Label className="font-bold">Adresser</Label>
             <FastighetsInfoAdresser
               fastighet={props.fastighet}
-              onMapUpdate={handleMapUpdate}
-              mapState={mapState}
+              mainMap={mainMap}
               forceNullDrawControl={true}
+              setAddresses={setAddresses}
+              addresses={addresses}
+              mapObjectAddress={mapObjectAddress}
             />
           </div>
 

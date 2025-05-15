@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, use } from "react";
 import {
   Table,
   TableBody,
@@ -32,33 +32,15 @@ interface DataItem {
 }
 
 export function FastighetsInfoAdresser(props: any) {
-  const [data, setData] = useState<DataItem[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
   const [rowSelection, setRowSelection] = React.useState({});
   const [listUpdated, setListUpdated] = useState(false);
-
-  const fetchAdresses = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:3001/getAddresses/${props.fastighet.id}`
-      );
-      if (!res.ok) {
-        return;
-      }
-      const json = await res.json();
-      setData(json.address.reverse());
-      return;
-    } catch (err) {
-      return;
-    }
-  };
-
   const deleteAddress = async (id: number, pointId: number) => {
     try {
-      const res = await fetch(`http://localhost:3001/deleteAddress/${id}`, {
+      const res = await fetch(`api/deleteAddress/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -67,11 +49,18 @@ export function FastighetsInfoAdresser(props: any) {
 
       setListUpdated(!listUpdated);
       if (props.forceNullDrawControl) {
-        props.onMapUpdate(!props.mapState);
+        const map = props.mainMap;
+        props.setAddresses((prev: any) =>
+          prev.filter((item: any) => item.id !== id)
+        );
+        map.removeLayer(pointId);
+        map.removeSource(pointId);
       } else {
         props.mapRef.removeLayer(pointId);
         props.mapRef.removeSource(pointId);
-        props.fetchAddresses();
+        props.setAddressesFromMainMap((prev: any) =>
+          prev.filter((item: any) => item.id !== id)
+        );
       }
       return;
     } catch (err) {
@@ -111,12 +100,10 @@ export function FastighetsInfoAdresser(props: any) {
     },
   ];
 
-  useEffect(() => {
-    fetchAdresses();
-  }, [props.fastighet.id, listUpdated]);
-
   const table = useReactTable<DataItem>({
-    data,
+    data: props.forceNullDrawControl
+      ? props.addresses
+      : props.addressesFromMainMap,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -194,9 +181,12 @@ export function FastighetsInfoAdresser(props: any) {
           props.drawControlRef.current == null ? (
             <FastighetsInfoAddAdress
               fastighet={props.fastighet}
-              onSave={() => setListUpdated(!listUpdated)}
+              setAddresses={props.setAddresses}
               onMapUpdate={props.onMapUpdate}
               mapState={props.mapState}
+              mainMap={props.mainMap}
+              mapObjectAddress={props.mapObjectAddress}
+              addresses={props.addresses}
             />
           ) : (
             <Button

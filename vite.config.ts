@@ -14,12 +14,6 @@ export default defineConfig({
       host: "localhost",
       port: 5173,
     },
-    proxy: {
-      "/api/auth": {
-        target: "http://api:3001",
-        changeOrigin: true,
-      },
-    },
   },
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
 });

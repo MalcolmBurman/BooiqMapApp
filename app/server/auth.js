@@ -1,13 +1,13 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import db from "./db.js";
-import { sendEmail } from "./email.js";
+import { sendEmail } from "../../email.js";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
-  trustedOrigins: [process.env.VITE_FRONT_URL, process.env.VITE_API_URL],
+  trustedOrigins: [import.meta.env.VITE_URL],
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
@@ -62,18 +62,5 @@ export const auth = betterAuth({
       });
     },
     autoSignInAfterVerification: true,
-  },
-  advanced: {
-    crossSubDomainCookies: {
-      enabled: true,
-      domain: ".onrender.com", // Domain with a leading period
-    },
-    defaultCookieAttributes: {
-      secure: true,
-      httpOnly: true,
-      sameSite: "none", // Allows CORS-based cookie sharing across subdomains
-      partitioned: false, // New browser standards will mandate this for foreign cookies
-      path: "/",
-    },
   },
 });

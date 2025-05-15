@@ -15,6 +15,8 @@ import { useSession, signOut } from "../lib/auth-client";
 import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router";
+import { Link } from "react-router";
 
 const items = [
   {
@@ -29,19 +31,28 @@ const items = [
   },
 ];
 
-export function Navbar() {
-  const { data: session } = useSession();
-
-  const url = window.location.href;
-  if (!url.includes("/home") && !url.includes("/properties") && session) {
-    window.location.href = "/home";
-  }
+function RedirectOnSession({ session }: { session: any }) {
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!url.includes("/home") && !url.includes("/properties") && session) {
-      window.location.href = "/home";
+    const path = location.pathname;
+
+    if (
+      session &&
+      !path.startsWith("/home") &&
+      !path.startsWith("/properties")
+    ) {
+      navigate("/home");
     }
-  }, [session]);
+  }, [session, location.pathname]);
+
+  return null;
+}
+
+export function Navbar() {
+  const session = useSession().data;
+  RedirectOnSession({ session });
 
   return (
     <Sidebar>
@@ -52,12 +63,12 @@ export function Navbar() {
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <a href={item.url}>
+                  <Link to={item.url}>
                     <span>
                       <item.icon width={20} height={20} />
                     </span>
                     <span className="">{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -67,7 +78,7 @@ export function Navbar() {
       <SidebarFooter>
         <span className="flex items-center gap-2">
           <img src="./booiq.png" alt="Booiq" className="size-10 rounded-sm" />
-          {session?.user.name}
+          {session?.user?.name}
         </span>
         <Button
           variant={"outline"}
