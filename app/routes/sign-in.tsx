@@ -29,7 +29,6 @@ export default function SignIn() {
       },
       {
         onRequest: (ctx) => {
-          console.log(ctx);
           setLoading(true);
         },
         onResponse: (ctx) => {
