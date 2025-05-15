@@ -38,7 +38,7 @@ export const auth = betterAuth({
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       const verificationUrl =
-        url.slice(0, -1) + "http://localhost:5173/sign-in";
+        url.slice(0, -1) + import.meta.env.VITE_URL + "/home";
       await sendEmail({
         to: user.email,
         subject: "Verifiera din e-postadress",
